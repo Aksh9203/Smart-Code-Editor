@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Python Editor</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background-color: #282a36; color: white; }
+        
+        /* Layout: Left (Editor) and Right (Tools) */
+        #editor-container { width: 60%; border-right: 2px solid #444; display: flex; flex-direction: column; }
+        #sidebar { width: 40%; padding: 20px; background-color: #1e1f29; overflow-y: auto; }
+        
+        .CodeMirror { height: 100%; font-size: 16px; }
+        
+        h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #50fa7b; }
+        
+        /* Buttons */
+        button { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; margin-bottom: 10px; }
+        .btn-run { background-color: #50fa7b; color: #282a36; font-size: 16px; width: 100%; }
+        .btn-ask { background-color: #8be9fd; color: #282a36; width: 100%; margin-top: 5px; }
+        .btn-run:hover { background-color: #40c963; }
+        
+        /* Output Boxes */
+        .box { background: #282a36; padding: 15px; border-radius: 8px; border: 1px solid #444; min-height: 50px; white-space: pre-wrap; font-family: monospace; margin-bottom: 20px;}
+        input[type="text"] { width: 95%; padding: 10px; border-radius: 5px; border: none; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="editor-container">
+        <textarea id="code-editor"># Welcome to your AI Editor!
+def greet(name):
+    return f"Hello, {name}!"
+
+print(greet("World"))
+</textarea>
+    </div>
+
+    <div id="sidebar">
+        <h2>Terminal Output</h2>
+        <button class="btn-run" onclick="runCode()">▶ Run Code</button>
+        <div id="output" class="box">Result will appear here...</div>
+
+        <h2>AI Mentor</h2>
+        <input type="text" id="question" placeholder="e.g., Explain this function...">
+        <button class="btn-ask" onclick="askAI()">🤔 Ask AI</button>
+        <div id="ai-response" class="box" style="color: #f1fa8c;">AI answer will appear here...</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+
+    <script>
+        // Initialize CodeMirror (The pretty editor)
+        var editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+            mode: "python",
+            theme: "dracula",
+            lineNumbers: true
+        });
+
+        // Function 1: Run Code
+        async function runCode() {
+            const outputBox = document.getElementById('output');
+            outputBox.innerText = "Running...";
+            
+            const response = await fetch('/run', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({code: editor.getValue()})
+            });
+            const data = await response.json();
+            
+            // Piston returns { run: { output: "..." } }
+            if (data.run) {
+                outputBox.innerText = data.run.output;
+            } else {
+                outputBox.innerText = "Error running code.";
+            }
+        }
+
+        // Function 2: Ask AI
+        async function askAI() {
+            const aiBox = document.getElementById('ai-response');
+            const question = document.getElementById('question').value;
+            aiBox.innerText = "Thinking...";
+            
+            const response = await fetch('/ask_ai', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    code: editor.getValue(),
+                    question: question
+                })
+            });
+            const data = await response.json();
+            aiBox.innerText = data.answer;
+        }
+    </script>
+</body>
+</html>
