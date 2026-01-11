@@ -29,6 +29,3 @@ flask_code_editor/
 └── templates/
     └── index.html        # Frontend UI
 ```
-## 🔮 Future Roadmap (Version 2.0)
-* **Multi-Language Support:** Expanding compiler support to Java and C++.
-* **User Accounts:** Ability to save code snippets to a database.
