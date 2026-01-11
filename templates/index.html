@@ -3,79 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Python Editor</title>
+    <title>Smart Code Editor</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
     
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background-color: #282a36; color: white; }
+        /* Make the code block darker and add scrolling if it's too wide */
+        #ai-response pre {
+            background-color: #0d0e12; /* Very dark background for code */
+            border: 1px solid #444;    /* Subtle border */
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;          /* Scroll sideways if code is long */
+            margin-top: 10px;
+        }
+
+        /* Fix the font inside the code block */
+        #ai-response code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            color: #50fa7b; /* Matrix green text color */
+        }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background-color: #282a36; color: white; }
         
-        /* Layout: Left (Editor) and Right (Tools) */
+        /* 1. NEW HEADER STYLE */
+        header {
+            background-color: #1e1f29;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 { margin: 0; font-size: 20px; color: #50fa7b; }
+        header span { font-size: 14px; color: #aaa; }
+
+        /* Main Layout */
+        #main-container { display: flex; flex: 1; overflow: hidden; }
+        
         #editor-container { width: 60%; border-right: 2px solid #444; display: flex; flex-direction: column; }
         #sidebar { width: 40%; padding: 20px; background-color: #1e1f29; overflow-y: auto; }
         
         .CodeMirror { height: 100%; font-size: 16px; }
         
-        h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #50fa7b; }
+        /* 2. NEW DROPDOWN STYLE */
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #282a36;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        h2 { border-bottom: 1px solid #444; padding-bottom: 10px; color: #8be9fd; margin-top: 20px; }
         
-        /* Buttons */
         button { cursor: pointer; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; margin-bottom: 10px; }
         .btn-run { background-color: #50fa7b; color: #282a36; font-size: 16px; width: 100%; }
-        .btn-ask { background-color: #8be9fd; color: #282a36; width: 100%; margin-top: 5px; }
+        .btn-ask { background-color: #bd93f9; color: #282a36; width: 100%; margin-top: 5px; }
         .btn-run:hover { background-color: #40c963; }
         
-        /* Output Boxes */
-        .box { background: #282a36; padding: 15px; border-radius: 8px; border: 1px solid #444; min-height: 50px; white-space: pre-wrap; font-family: monospace; margin-bottom: 20px;}
+        .box { background: #282a36; padding: 15px; border-radius: 8px; border: 1px solid #444; margin-bottom: 20px; white-space: pre-wrap; font-family: monospace; }
         input[type="text"] { width: 95%; padding: 10px; border-radius: 5px; border: none; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="editor-container">
-        <textarea id="code-editor"># Welcome to your AI Editor!
-def greet(name):
-    return f"Hello, {name}!"
+    <header>
+        <h1>⚡ Smart AI Code Editor</h1>
+        <span>v1.1</span>
+    </header>
 
-print(greet("World"))
-</textarea>
-    </div>
+    <div id="main-container">
+        <div id="editor-container">
+            <textarea id="code-editor"># Select Python in the menu to start!
+print("Hello World")</textarea>
+        </div>
 
-    <div id="sidebar">
-        <h2>Terminal Output</h2>
-        <button class="btn-run" onclick="runCode()">▶ Run Code</button>
-        <div id="output" class="box">Result will appear here...</div>
+        <div id="sidebar">
+            
+            <label style="font-weight: bold; color: #ff79c6;">Select Language:</label>
+            <select id="language-select" onchange="changeLanguage()">
+                <option value="python">Python (3.10)</option>
+                <option value="javascript">JavaScript (Node 18)</option>
+                <option value="java">Java (OpenJDK 15)</option>
+                <option value="cpp">C++ (GCC)</option>
+            </select>
 
-        <h2>AI Mentor</h2>
-        <input type="text" id="question" placeholder="e.g., Explain this function...">
-        <button class="btn-ask" onclick="askAI()">🤔 Ask AI</button>
-        <div id="ai-response" class="box" style="color: #f1fa8c;">AI answer will appear here...</div>
+            <h2>Terminal Output</h2>
+            <button class="btn-run" onclick="runCode()">▶ Run Code</button>
+            <div id="output" class="box">Result will appear here...</div>
+
+            <h2>AI Mentor</h2>
+            <input type="text" id="question" placeholder="e.g., Explain this loop...">
+            <button class="btn-ask" onclick="askAI()">🤔 Ask AI</button>
+            <div id="ai-response" class="box" style="color: #f1fa8c;">AI answer will appear here...</div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <script>
-        // Initialize CodeMirror (The pretty editor)
+        // Initialize CodeMirror
         var editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             mode: "python",
             theme: "dracula",
             lineNumbers: true
         });
 
-        // Function 1: Run Code
+        // Function to handle language change
+        function changeLanguage() {
+            var lang = document.getElementById("language-select").value;
+            var mode = "python";
+            var defaultCode = "";
+
+            if (lang === "python") {
+                mode = "python";
+                defaultCode = "print('Hello Python!')";
+            } else if (lang === "javascript") {
+                mode = "javascript";
+                defaultCode = "console.log('Hello JavaScript!');";
+            } else if (lang === "java") {
+                mode = "text/x-java";
+                defaultCode = "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello Java!\");\n    }\n}";
+            } else if (lang === "cpp") {
+                mode = "text/x-c++src";
+                defaultCode = "#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << \"Hello C++!\" << endl;\n    return 0;\n}";
+            }
+
+            // Update CodeMirror mode and default text
+            editor.setOption("mode", mode);
+            editor.setValue(defaultCode);
+        }
+
         async function runCode() {
             const outputBox = document.getElementById('output');
+            const lang = document.getElementById("language-select").value;
             outputBox.innerText = "Running...";
             
+            console.log(lang);
             const response = await fetch('/run', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({code: editor.getValue()})
+                body: JSON.stringify({
+                    code: editor.getValue(),
+                    language: lang 
+                })
             });
-            const data = await response.json();
             
-            // Piston returns { run: { output: "..." } }
+            const data = await response.json();
+            console.log(data);            
             if (data.run) {
                 outputBox.innerText = data.run.output;
             } else {
@@ -83,22 +167,27 @@ print(greet("World"))
             }
         }
 
-        // Function 2: Ask AI
         async function askAI() {
             const aiBox = document.getElementById('ai-response');
             const question = document.getElementById('question').value;
-            aiBox.innerText = "Thinking...";
+            const lang = document.getElementById("language-select").value;
+            aiBox.innerHTML = "<i>Thinking...</i>";
             
             const response = await fetch('/ask_ai', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     code: editor.getValue(),
-                    question: question
+                    question: question,
+                    language: lang
                 })
             });
             const data = await response.json();
-            aiBox.innerText = data.answer;
+            let formattedResponse = data.answer;
+            if (data.solution) {
+                formattedResponse += "\n\n**Suggested Solution:**\n```" + lang + "\n" + data.solution + "\n";
+            }
+            aiBox.innerHTML = marked.parse(formattedResponse);
         }
     </script>
 </body>
