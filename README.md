@@ -28,4 +28,8 @@ flask_code_editor/
 ├── app.py                # Main Flask backend application
 └── templates/
     └── index.html        # Frontend UI
+└── static/
+    └── script.js
+    └── style.css
+ 
 ```
