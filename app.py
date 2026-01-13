@@ -19,7 +19,7 @@ if not api_key:
 # We create the client once.
 client = genai.Client(api_key=api_key)
 
-# --- NEW: Define the Structure for the AI Response ---
+# Structure for the AI Response 
 class AIResponse(BaseModel):
     """Structure for the AI's coding assistance response."""
     solution_code: str = Field(
@@ -64,7 +64,7 @@ def ask_ai():
     code = data.get('code')
     question = data.get('question')
 
-    # 1. New Prompt Strategy: Focus on the "Task" rather than conversation
+    # Prompt
     prompt = f"""
     You are an expert Coding Tutor.
     The user has written the following code in {language} language, Suggest soutions for {language} language only:
