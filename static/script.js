@@ -1,3 +1,6 @@
+let isLoggedIn = false; // By default, user is guest
+let currentUser = "";
+
 // Initialize CodeMirror
 var editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
     mode: "python", theme: "dracula", lineNumbers: true
@@ -37,7 +40,6 @@ function handleFileSelection(event) {
 
     const reader = new FileReader();
     reader.onload = () => {
-        // UPDATE DROPDOWN
         document.getElementById("language-select").value = detectedLang;
         
         // UPDATE EDITOR MODE
@@ -56,7 +58,7 @@ function showMessage(message, type) {
     messageDisplay.style.color = type === "error" ? "#ff5555" : "#50fa7b";
 }
 
-// Standard Language Change (Resets to Hello World)
+// Programming Language Selection
 function changeLanguage() {
     var lang = document.getElementById("language-select").value;
     var mode = "python";
@@ -95,22 +97,153 @@ async function runCode() {
     } catch (err) { outputBox.innerText = "Error: " + err; }
 }
 
-async function askAI() {
+async function submitSignup(event){
+
+    event.preventDefault();
+
+    const username = document.getElementById('reg-user').value;
+    const firstname = document.getElementById('reg-fname').value;
+    const lastname = document.getElementById('reg-lname').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-pass').value;
+    const confirmPassword = document.getElementById('reg-confirmPass').value;
+
+    
+    const response = await fetch('/register',{
+        method: 'POST',
+        headers: {
+            'Content-Type':'application/json',
+        },
+        body: JSON.stringify({
+            username: username,
+            firstname: firstname,
+            lastname: lastname,
+            email: email,
+            password: password,
+            confirmPassword: confirmPassword
+        })
+    })
+
+    const data = await response.json();
+
+    if(data.success){
+        document.getElementById('signup-section').style.display = 'none';
+        document.getElementById('login-section').style.display = 'block';
+    }
+    else{
+        alert('An error occurred during registration.')
+    }
+}
+
+async function submitLogin(event){
+
+    event.preventDefault();
+
+    const username = document.getElementById('login-user').value;
+    const email = document.getElementById('login-user').value;
+    const password = document.getElementById('login-pass').value;
+
+    const response = await fetch('/login',{
+        method: 'POST',
+        headers: {
+            'Content-Type' : 'application/json',
+        },
+        body: JSON.stringify({
+            username: username,
+            email: email,
+            password: password
+        })
+    })
+
+    const data = await response.json();
+
+    if(data.success){
+        isLoggedIn = true;
+
+        await closeModal();
+    }
+    else{
+        alert('An error occurred during login.')
+    }
+}
+
+async function triggerAskAI() {
     const aiBox = document.getElementById('ai-response');
     const question = document.getElementById('question').value;
     const lang = document.getElementById("language-select").value;
-    aiBox.innerHTML = "<i>Thinking...</i>";
-    
-    const response = await fetch('/ask_ai', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ code: editor.getValue(), question: question, language: lang })
-    });
-    const data = await response.json();
-    
-    let formattedResponse = data.answer;
-    if (data.solution) {
-        formattedResponse += "\n\n**Suggested Solution:**\n```" + lang + "\n" + data.solution + "\n```";
+
+    if(isLoggedIn === false){
+        document.getElementById('auth-modal').style.display = 'block';
+    } else {
+        aiBox.innerHTML = "<i>Thinking...</i>";
+        const response = await fetch('/ask_ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                code: editor.getValue(), 
+                question: question, 
+                language: lang 
+            })
+        });    
+        
+        const data = await response.json();
+        
+        let formattedResponse = data.answer;
+        if (data.solution) {
+            formattedResponse += "\n\n**Suggested Solution:**\n```" + lang + "\n" + data.solution + "\n```";
+        }
+        aiBox.innerHTML = marked.parse(formattedResponse);
     }
-    aiBox.innerHTML = marked.parse(formattedResponse);
+}
+
+async function triggerFeedback() {
+ 
+    if(isLoggedIn === false){
+        document.getElementById('auth-modal').style.display = 'block';
+    }
+    else{
+       document.getElementById('feedback-text').value = "";
+       document.getElementById('feedback-modal').style.display = 'block';
+    }
+}
+
+async function submitFeedback() {
+    
+    const feedback = document.getElementById('feedback-text').value;
+
+    const response = await fetch('/feedback',{
+        method: 'POST',
+        headers: {
+            'Content-Type' : 'application/json',
+        },
+        body: JSON.stringify({
+            feedback: feedback
+        })            
+    })
+
+    const data = await response.json();
+
+    if(data.success){
+        await closeModal();
+    }
+    else{
+        alert('Something is wrong!!!')
+    }
+}
+
+function showSignup(){
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('signup-section').style.display = 'block';
+}
+
+function showLogin(){
+    document.getElementById('signup-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('auth-modal').style.display = 'none';
+    document.getElementById('feedback-modal').style.display = 'none';
 }

@@ -1,9 +1,13 @@
 import os
 import requests
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, session
 from google import genai
 from pydantic import BaseModel, Field
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+
 
 # Load environment variables
 load_dotenv()
@@ -18,6 +22,30 @@ if not api_key:
 
 # We create the client once.
 client = genai.Client(api_key=api_key)
+
+
+
+# # Configure SQLAlchemy
+# app.config["SQLALCHEMY_DATABSE_URI"] = "sqlite:///info.db"
+# db = SQLAlchemy(app)
+
+# # Database Model
+
+# class User(db.model):
+#     id = db.Column(db.Integer,primary=True)
+#     firstname = db.Column(db.String(50))
+#     lastname = db.Column(db.String(50))
+#     username = db.Column(db.String(50),unique=True,nullable=False)
+#     password = db.Column(db.String(50),nullable=False)
+
+#     def set_password(self,password):
+#         self.set_password = generate_password_hash(password)
+
+#     def check_password(self,password):
+#         return check_password_hash(self.set_password, password)
+
+
+
 
 # Structure for the AI Response 
 class AIResponse(BaseModel):

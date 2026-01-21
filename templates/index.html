@@ -7,15 +7,16 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
-    
     <link rel="stylesheet" href="/static/style.css">
-
 </head>
 <body>
 
     <header>
         <h1>⚡ Smart Code Editor</h1>
-        <span>v2.1</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span id="user-display" style="font-size: 14px; color: #ff79c6;">Guest</span>
+            <span>v2.1</span>
+        </div>
     </header>
 
     <div id="main-container">
@@ -43,8 +44,49 @@ print("Hello World")</textarea>
 
             <h2>AI Mentor</h2>
             <input type="text" id="question" placeholder="e.g., Explain this loop...">
-            <button class="btn-ask" onclick="askAI()">🤔 Ask AI</button>
+            <button class="btn-ask" onclick="triggerAskAI()">🤔 Ask AI</button>
             <div id="ai-response" class="box" style="color: #f1fa8c;">AI answer will appear here...</div>
+            
+            <button class="btn-feedback" onclick="triggerFeedback()">💬 Give Feedback</button>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            
+            <div id="login-section">
+                <h2>Welcome Back</h2>
+                <input type="text" id="login-user" placeholder="Username or Email">
+                <input type="password" id="login-pass" placeholder="Password">
+                <button class="btn-run" onclick="submitLogin()">Log In</button>
+                <p class="switch-text">New here? <a href="#" onclick="showSignup()">Sign Up</a></p>
+            </div>
+
+            <div id="signup-section" style="display: none;">
+                <h2>Create Account</h2>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="reg-fname" placeholder="First Name">
+                    <input type="text" id="reg-lname" placeholder="Last Name">
+                </div>
+                <input type="email" id="reg-email" placeholder="Email Address">
+                <input type="text" id="reg-user" placeholder="Choose Username">
+                <input type="password" id="reg-pass" placeholder="Password">
+                <input type="password" id="reg-confirmPass" placeholder="Confirm Password">
+                <button class="btn-ask" onclick="submitSignup()">Sign Up</button>
+                <p class="switch-text">Already have an account? <a href="#" onclick="showLogin()">Log In</a></p>
+            </div>
+            
+            <div id="auth-message" style="margin-top: 10px; font-size: 14px;"></div>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>Your Feedback</h2>
+            <textarea id="feedback-text" placeholder="Tell us what you think..." style="width: 100%; height: 100px; background: #282a36; color: white; border: 1px solid #444; margin-bottom: 10px;"></textarea>
+            <button class="btn-run" onclick="submitFeedback()">Submit Feedback</button>
         </div>
     </div>
 
@@ -53,7 +95,6 @@ print("Hello World")</textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <script src="/static/script.js"></script>
 </body>
 </html>
