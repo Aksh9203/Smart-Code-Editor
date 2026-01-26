@@ -97,16 +97,14 @@ async function runCode() {
     } catch (err) { outputBox.innerText = "Error: " + err; }
 }
 
-async function submitSignup(event){
+async function submitSignup(){
 
-    event.preventDefault();
 
     const username = document.getElementById('reg-user').value;
     const firstname = document.getElementById('reg-fname').value;
     const lastname = document.getElementById('reg-lname').value;
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-pass').value;
-    const confirmPassword = document.getElementById('reg-confirmPass').value;
 
     
     const response = await fetch('/register',{
@@ -120,7 +118,6 @@ async function submitSignup(event){
             lastname: lastname,
             email: email,
             password: password,
-            confirmPassword: confirmPassword
         })
     })
 
@@ -135,9 +132,7 @@ async function submitSignup(event){
     }
 }
 
-async function submitLogin(event){
-
-    event.preventDefault();
+async function submitLogin(){
 
     const username = document.getElementById('login-user').value;
     const email = document.getElementById('login-user').value;
@@ -160,7 +155,10 @@ async function submitLogin(event){
     if(data.success){
         isLoggedIn = true;
 
-        await closeModal();
+        document.getElementById('user-display').textContent = username; 
+        document.getElementById('user-display').style.color = "#50fa7b";
+
+        closeModal();
     }
     else{
         alert('An error occurred during login.')
@@ -212,6 +210,7 @@ async function triggerFeedback() {
 async function submitFeedback() {
     
     const feedback = document.getElementById('feedback-text').value;
+    const username = document.getElementById('user-display').textContent;
 
     const response = await fetch('/feedback',{
         method: 'POST',
@@ -219,14 +218,16 @@ async function submitFeedback() {
             'Content-Type' : 'application/json',
         },
         body: JSON.stringify({
-            feedback: feedback
+            feedback: feedback,
+            username: username
         })            
     })
 
     const data = await response.json();
 
     if(data.success){
-        await closeModal();
+        alert("Feedback sent!");
+        closeModal();
     }
     else{
         alert('Something is wrong!!!')

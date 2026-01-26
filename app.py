@@ -13,6 +13,7 @@ from flask_login import LoginManager
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key='secretkey_project'
 
 # Access the API key
 api_key = os.getenv('GOOGLE_API_KEY')
@@ -23,29 +24,86 @@ if not api_key:
 # We create the client once.
 client = genai.Client(api_key=api_key)
 
-
-
-# # Configure SQLAlchemy
-# app.config["SQLALCHEMY_DATABSE_URI"] = "sqlite:///info.db"
-# db = SQLAlchemy(app)
+# Configure SQLAlchemy
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///info.db"
+db = SQLAlchemy(app)
 
 # # Database Model
 
-# class User(db.model):
-#     id = db.Column(db.Integer,primary=True)
-#     firstname = db.Column(db.String(50))
-#     lastname = db.Column(db.String(50))
-#     username = db.Column(db.String(50),unique=True,nullable=False)
-#     password = db.Column(db.String(50),nullable=False)
+class FeedbackUser(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    feedback = db.Column(db.String(1000))
+    username = db.Column(db.String(50),nullable=False)
 
-#     def set_password(self,password):
-#         self.set_password = generate_password_hash(password)
+class User(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    firstname = db.Column(db.String(50),nullable=False)
+    lastname = db.Column(db.String(50),nullable=False)
+    username = db.Column(db.String(50),unique=True,nullable=False)
+    email = db.Column(db.String(50),nullable=False)
+    password = db.Column(db.String(150),nullable=False)
 
-#     def check_password(self,password):
-#         return check_password_hash(self.set_password, password)
+    def set_password(self,password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self,password):
+        return check_password_hash(self.password, password)
 
 
+@app.route('/login', methods=['POST'])
+def login():
+    #Collect info
+    data = request.json
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
 
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.check_password(password):
+        session['username'] = username
+        return jsonify({"success": True, "username": username})
+    else:
+        return jsonify({"success": False})
+    
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username')
+    firstname = data.get('firstname')
+    lastname = data.get('lastname')
+    email = data.get('email')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    if user:
+        return jsonify({"success": False, "message": "User exists"})
+    else:
+        new_user = User(username=username, firstname=firstname, lastname=lastname, email=email)
+        new_user.set_password(password)
+        
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Account created"})
+
+
+@app.route('/feedback', methods=['POST'])
+def feedback():
+
+    data = request.json
+    user_msg = data.get('feedback')
+    username = data.get('username') or "Anonymous"
+
+    feedback = FeedbackUser.query.filter_by(username=username).first()
+
+    new_feedback = FeedbackUser(feedback=user_msg, username=username)
+
+    db.session.add(new_feedback)
+    db.session.commit()
+
+    return jsonify({"success":True})
+  
 
 # Structure for the AI Response 
 class AIResponse(BaseModel):
@@ -132,4 +190,6 @@ def ask_ai():
         return jsonify({"answer": f"Error generating response: {str(e)}", "solution": ""})
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
